@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -102,8 +104,15 @@ func handleItemCompleted(event TodoistEvent) error {
 	if err != nil {
 		return errors.Wrapf(err, "Error in task create http POST")
 	}
+	defer res.Body.Close()
+
+	resBody, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return errors.Wrapf(err, "Error reading task create response body")
+
+	}
 	if res.StatusCode != http.StatusCreated {
-		return errors.New("Status is not 201")
+		return errors.New(fmt.Sprintf("Status is not 201. Body: %s", resBody))
 	}
 
 	// complete task
@@ -125,6 +134,13 @@ func main() {
 
 	APIToken = viper.GetString("habitica_key")
 	UserID = viper.GetString("habitica_user_id")
+
+	if APIToken == "" {
+		log.Fatal("API Token is empty. Please set the REDEEM_HABITICA_KEY environment variable.")
+	}
+	if UserID == "" {
+		log.Fatal("API Token is empty. Please set the REDEEM_HABITICA_USER_ID environment variable.")
+	}
 
 	lambda.Start(handler)
 }
