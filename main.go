@@ -31,19 +31,13 @@ const (
 
 func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	if request.Body == "" {
-		return events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Body:       "empty payload",
-		}, errors.New("empty payload")
+		return events.APIGatewayProxyResponse{}, errors.New("empty payload")
 	}
 
 	var event TodoistEvent
 	err := json.Unmarshal([]byte(request.Body), &event)
 	if err != nil {
-		return events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Body:       "Internal server error",
-		}, errors.New("json unmarshal error")
+		return events.APIGatewayProxyResponse{}, errors.New("json unmarshal error")
 	}
 
 	// TODO: create habitica task
