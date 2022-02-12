@@ -167,8 +167,8 @@ func handleItemCompleted(event TodoistEvent) error {
 		return errors.Wrapf(err, "Error reading score task response body")
 
 	}
-	if res.StatusCode != http.StatusCreated {
-		return errors.New(fmt.Sprintf("Status is not 201. Body: %s Request: %s", resBody, taskJson))
+	if res.StatusCode != http.StatusOK {
+		return errors.New(fmt.Sprintf("Status is not 200 OK. Body: %s Request: %s", resBody, taskJson))
 	}
 
 	return nil
