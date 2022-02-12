@@ -40,12 +40,28 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		return events.APIGatewayProxyResponse{}, errors.New("json unmarshal error")
 	}
 
-	// TODO: create habitica task
+	switch event.EventName {
+	case ItemCompleted:
+		err := handleItemCompleted(event)
+		if err != nil {
+			return events.APIGatewayProxyResponse{}, errors.New("error in handleItemCompleted")
+		}
+	default:
+		return events.APIGatewayProxyResponse{}, errors.New("invalid event name")
+	}
 
 	return events.APIGatewayProxyResponse{
 		StatusCode: 200,
 		Body:       "Hello AWS Lambda and Netlify",
 	}, nil
+}
+
+func handleItemCompleted(event TodoistEvent) error {
+	// create task
+
+	// complete task
+
+	return nil
 }
 
 func main() {
