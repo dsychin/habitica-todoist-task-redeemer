@@ -29,6 +29,16 @@ type (
 		ID      int    `json:"id"`
 		Content string `json:"content"`
 	}
+
+	HabiticaResponse struct {
+		Success bool        `json:"success"`
+		Data    interface{} `json:"data"`
+	}
+
+	HabiticaTask struct {
+		ID   string `json:"id"`
+		Text string `json:"text"`
+	}
 )
 
 const (
@@ -61,6 +71,8 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 		if err != nil {
 			return events.APIGatewayProxyResponse{}, errors.Wrap(err, "error in handleItemCompleted")
 		}
+	case ItemUncompleted:
+		// TODO: revert if item is uncompleted
 	default:
 		return events.APIGatewayProxyResponse{}, errors.New("invalid event name")
 	}
@@ -75,6 +87,7 @@ func handleItemCompleted(event TodoistEvent) error {
 	client := &http.Client{}
 
 	// TODO: handle tags to identify which task were created by this program
+	// TODO: split into smaller functions
 
 	// create task
 	task := map[string]interface{}{
@@ -115,7 +128,42 @@ func handleItemCompleted(event TodoistEvent) error {
 		return errors.New(fmt.Sprintf("Status is not 201. Body: %s Request: %s", resBody, taskJson))
 	}
 
+	var habiticaRes HabiticaResponse
+	err = json.Unmarshal(resBody, &habiticaRes)
+	if err != nil {
+		return errors.Wrapf(err, "Error unmarshaling into HabiticaResponse. Body: %s", resBody)
+	}
+	if !habiticaRes.Success {
+		return errors.New(fmt.Sprintf("Score task response is not success. Response: %s", resBody))
+	}
+	habiticaTask := habiticaRes.Data.(HabiticaTask)
+
 	// complete task
+	scoreTaskUrl := HabiticaBaseURL + fmt.Sprintf("tasks/%s/score/up", habiticaTask.ID)
+	req, err = http.NewRequest(http.MethodPost, scoreTaskUrl, nil)
+	if err != nil {
+		return errors.Wrapf(err, "Error in score task request. Event: %+v", event)
+	}
+
+	req.Header.Set("content-type", "application/json")
+	req.Header.Set("x-client", AppID)
+	req.Header.Set("x-api-user", UserID)
+	req.Header.Set("x-api-key", APIToken)
+
+	res, err = client.Do(req)
+	if err != nil {
+		return errors.Wrapf(err, "Error in score task http POST")
+	}
+	defer res.Body.Close()
+
+	resBody, err = ioutil.ReadAll(res.Body)
+	if err != nil {
+		return errors.Wrapf(err, "Error reading score task response body")
+
+	}
+	if res.StatusCode != http.StatusCreated {
+		return errors.New(fmt.Sprintf("Status is not 201. Body: %s Request: %s", resBody, taskJson))
+	}
 
 	return nil
 }
