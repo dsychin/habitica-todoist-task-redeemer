@@ -87,18 +87,17 @@ func handleItemCompleted(event TodoistEvent) error {
 	if err != nil {
 		return errors.Wrapf(err, "Error marshaling taskJson")
 	}
-	jsonReader := bytes.NewReader(taskJson)
 
 	// submit task create request
 	taskCreateUrl := HabiticaBaseURL + "tasks/user"
-	req, err := http.NewRequest(http.MethodPost, taskCreateUrl, jsonReader)
+	req, err := http.NewRequest(http.MethodPost, taskCreateUrl, bytes.NewBuffer(taskJson))
 	if err != nil {
 		return errors.Wrapf(err, "Error in new task create request. Event: %+v", event)
 	}
 
-	req.Header.Add("x-client", AppID)
-	req.Header.Add("x-api-user", UserID)
-	req.Header.Add("x-api-key", APIToken)
+	req.Header.Set("x-client", AppID)
+	req.Header.Set("x-api-user", UserID)
+	req.Header.Set("x-api-key", APIToken)
 
 	res, err := client.Do(req)
 	if err != nil {
