@@ -95,6 +95,7 @@ func handleItemCompleted(event TodoistEvent) error {
 		return errors.Wrapf(err, "Error in new task create request. Event: %+v", event)
 	}
 
+	req.Header.Set("content-type", "application/json")
 	req.Header.Set("x-client", AppID)
 	req.Header.Set("x-api-user", UserID)
 	req.Header.Set("x-api-key", APIToken)
