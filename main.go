@@ -111,7 +111,7 @@ func handleItemCompleted(event TodoistEvent) error {
 
 	}
 	if res.StatusCode != http.StatusCreated {
-		return errors.New(fmt.Sprintf("Status is not 201. Body: %s", resBody))
+		return errors.New(fmt.Sprintf("Status is not 201. Body: %s Request: %s", resBody, taskJson))
 	}
 
 	// complete task
