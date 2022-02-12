@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -136,7 +137,12 @@ func handleItemCompleted(event TodoistEvent) error {
 	if !habiticaRes.Success {
 		return errors.New(fmt.Sprintf("Score task response is not success. Response: %s", resBody))
 	}
-	habiticaTask := habiticaRes.Data.(HabiticaTask)
+
+	var habiticaTask HabiticaTask
+	err = mapstructure.Decode(habiticaRes.Data, &habiticaTask)
+	if err != nil {
+		return errors.Wrapf(err, "Error in converting Habitica response data to HabiticaTask. Response: %s", resBody)
+	}
 
 	// complete task
 	scoreTaskUrl := HabiticaBaseURL + fmt.Sprintf("tasks/%s/score/up", habiticaTask.ID)
