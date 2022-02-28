@@ -6,3 +6,7 @@ command = "make build"
 
 [build.environment]
 GO_IMPORT_PATH="github.com/dsychin/habitica-todoist-task-redeemer"
+
+[template.environment]
+HABITICA_KEY="CHANGE THIS TO YOUR HABITICA API TOKEN"
+HABITICA_USER_ID="CHANGE THIS TO YOUR HABITICA USER ID"
