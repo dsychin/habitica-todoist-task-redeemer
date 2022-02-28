@@ -3,7 +3,7 @@ directory = "functions"
 
 [build]
 command = "make build"
-publish = ""
+publish = "functions"
 
 [build.environment]
 GO_IMPORT_PATH="github.com/dsychin/habitica-todoist-task-redeemer"
