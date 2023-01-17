@@ -20,14 +20,14 @@ import (
 type (
 	TodoistEvent struct {
 		EventName EventName `json:"event_name"`
-		UserID    int       `json:"user_id"`
+		UserID    string    `json:"user_id"`
 		EventData EventData `json:"event_data"`
 	}
 
 	EventName string
 
 	EventData struct {
-		ID      int    `json:"id"`
+		ID      string `json:"id"`
 		Content string `json:"content"`
 	}
 
@@ -63,9 +63,11 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 	var event TodoistEvent
 	err := json.Unmarshal([]byte(request.Body), &event)
 	if err != nil {
-		return events.APIGatewayProxyResponse{}, errors.New("json unmarshal error")
+		return events.APIGatewayProxyResponse{}, errors.Wrapf(err, "error unmarshalling json: %s", []byte(request.Body))
 	}
 
+	log.Printf("Received event %s", event.EventName)
+	
 	switch event.EventName {
 	case ItemCompleted:
 		err := handleItemCompleted(event)
@@ -94,8 +96,10 @@ func handleItemCompleted(event TodoistEvent) error {
 	task := map[string]interface{}{
 		"text":  event.EventData.Content,
 		"type":  "todo",
-		"notes": fmt.Sprintf("Todoist: %d", event.EventData.ID),
+		"notes": fmt.Sprintf("https://todoist.com/showTask?id=%s", event.EventData.ID),
 	}
+
+	log.Printf("Processing ID %s - text %s", event.EventData.ID, event.EventData.Content)
 
 	taskJson, err := json.Marshal(task)
 	if err != nil {
@@ -170,6 +174,8 @@ func handleItemCompleted(event TodoistEvent) error {
 	if res.StatusCode != http.StatusOK {
 		return errors.New(fmt.Sprintf("Status is not 200 OK. Body: %s Request: %s", resBody, taskJson))
 	}
+
+	log.Printf("Status %d", res.StatusCode)
 
 	return nil
 }
